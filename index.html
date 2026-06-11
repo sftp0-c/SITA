@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Азбука физики</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <div class="logo" id="logoHome">
+                <span class="logo-icon">⚛</span>
+                <div>
+                    <h1>Азбука физики</h1>
+                    <p class="subtitle">Учебное пособие</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="search-box-header">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="globalSearch" placeholder="Поиск по модулям...">
+                    <div id="searchResults" class="search-results hidden"></div>
+                </div>
+                <button id="themeToggle" class="theme-btn" aria-label="Переключить тему">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="app">
+        <nav id="breadcrumb" class="breadcrumb"></nav>
+        <div id="content"></div>
+    </main>
+
+    <div id="viewer" class="viewer hidden">
+        <div class="viewer-header">
+            <button id="viewerBack" class="viewer-btn">← Назад</button>
+            <span id="viewerTitle" class="viewer-title"></span>
+            <div class="viewer-nav">
+                <button id="viewerPrev" class="viewer-btn">‹ Пред.</button>
+                <span id="viewerPageInfo"></span>
+                <button id="viewerNext" class="viewer-btn">След. ›</button>
+            </div>
+        </div>
+        <div class="viewer-body">
+            <img id="viewerImg" src="" alt="Страница учебника">
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

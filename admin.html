@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ — Азбука физики</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --bg-card: #ffffff;
+            --text: #1a1a2e;
+            --text-muted: #6c757d;
+            --accent: #4361ee;
+            --border: #e9ecef;
+            --danger: #e63946;
+            --success: #2d6a4f;
+            --radius: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-card);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .btn:hover { background: var(--border); }
+        .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn-accent:hover { background: #3a56d4; }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-danger:hover { opacity: 0.9; }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+
+        .section-group {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 14px 18px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .section-header h3 { font-size: 0.95rem; }
+        .section-body { padding: 14px 18px; display: none; }
+        .section-body.open { display: block; }
+
+        .block-group {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+        }
+        .block-header {
+            padding: 10px 14px;
+            background: var(--bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+        .block-body { padding: 10px 14px; display: none; }
+        .block-body.open { display: block; }
+
+        .module-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 70px 40px;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .module-row:last-child { border-bottom: none; }
+        .module-row input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .module-row .mod-id { font-size: 0.75rem; color: var(--text-muted); text-align: center; }
+        .module-row .del-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .add-module-btn {
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: var(--accent);
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 18px;
+            background: var(--success);
+            color: #fff;
+            border-radius: var(--radius);
+            font-size: 0.82rem;
+            display: none;
+            z-index: 999;
+        }
+        .status-bar.show { display: block; }
+
+        .json-editor {
+            width: 100%;
+            min-height: 400px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg);
+            color: var(--text);
+            margin-top: 12px;
+            display: none;
+        }
+        .json-editor.open { display: block; }
+    </style>
+</head>
+<body>
+    <h1>Админ-панель</h1>
+    <p class="subtitle">Редактирование структуры «Азбука физики». Изменения сохраняются в localStorage и применяются на основном сайте.</p>
+
+    <div class="toolbar">
+        <button class="btn btn-accent" onclick="saveAll()">Сохранить изменения</button>
+        <button class="btn" onclick="toggleJSON()">JSON-редактор</button>
+        <button class="btn btn-danger" onclick="resetData()">Сбросить к исходному</button>
+        <button class="btn" onclick="exportJSON()">Экспорт JSON</button>
+        <button class="btn" onclick="document.getElementById('importFile').click()">Импорт JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+
+    <textarea id="jsonEditor" class="json-editor"></textarea>
+
+    <div id="editor"></div>
+    <div id="statusBar" class="status-bar">Сохранено!</div>
+
+    <script>
+    let DATA = null;
+
+    async function init() {
+        const stored = localStorage.getItem('azbuka_data');
+        if (stored) {
+            DATA = JSON.parse(stored);
+        } else {
+            const resp = await fetch('data.json');
+            DATA = await resp.json();
+        }
+        renderEditor();
+    }
+
+    function renderEditor() {
+        const el = document.getElementById('editor');
+        el.innerHTML = DATA.sections.map((section, si) => `
+            <div class="section-group">
+                <div class="section-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                    <h3>Раздел ${section.id}: ${section.title}</h3>
+                    <span>▼</span>
+                </div>
+                <div class="section-body">
+                    <div style="margin-bottom:12px">
+                        <label style="font-size:0.78rem;color:var(--text-muted)">Название раздела:</label>
+                        <input value="${esc(section.title)}" onchange="DATA.sections[${si}].title=this.value" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;margin-top:4px;font-size:0.85rem;background:var(--bg);color:var(--text)">
+                    </div>
+                    ${section.blocks.map((block, bi) => `
+                        <div class="block-group">
+                            <div class="block-header" onclick="this.nextElementSibling.classList.toggle('open')">
+                                <span>Блок ${block.id}: ${block.title}</span>
+                                <span>▼</span>
+                            </div>
+                            <div class="block-body">
+                                <div style="margin-bottom:8px">
+                                    <input value="${esc(block.title)}" onchange="DATA.sections[${si}].blocks[${bi}].title=this.value" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.82rem;background:var(--bg);color:var(--text)">
+                                </div>
+                                ${block.modules.map((m, mi) => `
+                                    <div class="module-row">
+                                        <span class="mod-id">М${m.id}</span>
+                                        <input value="${esc(m.title)}" onchange="DATA.sections[${si}].blocks[${bi}].modules[${mi}].title=this.value">
+                                        <input type="number" value="${m.pdf}" onchange="DATA.sections[${si}].blocks[${bi}].modules[${mi}].pdf=+this.value" title="PDF страница">
+                                        <button class="del-btn" onclick="deleteModule(${si},${bi},${mi})" title="Удалить">×</button>
+                                    </div>
+                                `).join('')}
+                                <button class="add-module-btn" onclick="addModule(${si},${bi})">+ Добавить модуль</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function esc(str) {
+        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function deleteModule(si, bi, mi) {
+        if (confirm('Удалить этот модуль?')) {
+            DATA.sections[si].blocks[bi].modules.splice(mi, 1);
+            renderEditor();
+        }
+    }
+
+    function addModule(si, bi) {
+        const modules = DATA.sections[si].blocks[bi].modules;
+        const lastId = modules.length > 0 ? modules[modules.length - 1].id : 0;
+        const lastPdf = modules.length > 0 ? modules[modules.length - 1].pdf : DATA.sections[si].blocks[bi].pdfStart;
+        modules.push({ id: lastId + 1, title: 'Новый модуль', pdf: lastPdf + 1 });
+        renderEditor();
+    }
+
+    function saveAll() {
+        localStorage.setItem('azbuka_data', JSON.stringify(DATA));
+        showStatus('Сохранено!');
+    }
+
+    function resetData() {
+        if (confirm('Сбросить все изменения к исходному файлу data.json?')) {
+            localStorage.removeItem('azbuka_data');
+            location.reload();
+        }
+    }
+
+    function toggleJSON() {
+        const editor = document.getElementById('jsonEditor');
+        if (editor.classList.contains('open')) {
+            try {
+                DATA = JSON.parse(editor.value);
+                renderEditor();
+                showStatus('JSON применён');
+            } catch (e) {
+                alert('Ошибка JSON: ' + e.message);
+                return;
+            }
+            editor.classList.remove('open');
+        } else {
+            editor.value = JSON.stringify(DATA, null, 2);
+            editor.classList.add('open');
+        }
+    }
+
+    function exportJSON() {
+        const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'data.json';
+        a.click();
+    }
+
+    function importJSON(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function () {
+            try {
+                DATA = JSON.parse(reader.result);
+                localStorage.setItem('azbuka_data', JSON.stringify(DATA));
+                renderEditor();
+                showStatus('Импортировано!');
+            } catch (err) {
+                alert('Ошибка JSON: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function showStatus(msg) {
+        const bar = document.getElementById('statusBar');
+        bar.textContent = msg;
+        bar.classList.add('show');
+        setTimeout(() => bar.classList.remove('show'), 2000);
+    }
+
+    init();
+    </script>
+</body>
+</html>
